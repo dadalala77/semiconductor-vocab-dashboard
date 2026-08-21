@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>반도체 용어 Anki 대시보드</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="hero">
+    <div>
+      <p class="eyebrow">Semiconductor Vocabulary Trainer</p>
+      <h1>반도체 용어 학습 대시보드</h1>
+      <p class="subtitle">영어 약어·번역 용어를 카드로 외우고, Anki식 복습 주기로 다시 학습합니다. JSON/CSV/Markdown 파일을 드롭해서 내 학습 콘텐츠도 추가할 수 있어요.</p>
+    </div>
+    <div class="heroStats">
+      <div><strong id="statTotal">0</strong><span>전체 카드</span></div>
+      <div><strong id="statDue">0</strong><span>오늘 복습</span></div>
+      <div><strong id="statMastered">0</strong><span>숙련 카드</span></div>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="panel controls">
+      <section>
+        <h2>학습 모드</h2>
+        <div class="segmented" role="group" aria-label="study mode">
+          <button class="mode active" data-mode="due">오늘 복습</button>
+          <button class="mode" data-mode="new">새 카드</button>
+          <button class="mode" data-mode="all">전체</button>
+        </div>
+      </section>
+
+      <section>
+        <h2>검색/필터</h2>
+        <input id="search" type="search" placeholder="EOT, 가전자대, ALD..." />
+        <select id="fieldFilter">
+          <option value="">전체 분야</option>
+          <option value="전공정">전공정</option>
+          <option value="후공정">후공정</option>
+          <option value="소자">소자</option>
+        </select>
+        <select id="categoryFilter"><option value="">전체 세부 분야</option></select>
+        <select id="importanceFilter"><option value="">전체 중요도</option><option>필수</option><option>필수(핵심단어장)</option><option>자주 나옴</option><option>심화/참고</option><option>후보</option></select>
+      </section>
+
+      <section>
+        <h2>학습 콘텐츠 삽입</h2>
+        <div id="dropzone" class="dropzone">
+          <strong>파일을 여기에 드롭</strong>
+          <span>JSON / CSV / Markdown 지원</span>
+        </div>
+        <textarea id="pasteBox" rows="6" placeholder="term,korean,expansion,category 형식 CSV나 Markdown 표를 붙여넣고 [붙여넣기 가져오기]를 누르세요."></textarea>
+        <button id="importPaste" class="secondary">붙여넣기 가져오기</button>
+        <button id="downloadCsvTemplate" class="secondary">CSV 템플릿 다운로드</button>
+      </section>
+
+      <section class="actions">
+        <button id="resetProgress" class="danger">진도 초기화</button>
+        <button id="exportDeck" class="secondary">덱 JSON 내보내기</button>
+      </section>
+    </aside>
+
+    <section class="studyArea">
+      <div class="toolbar">
+        <div>
+          <h2 id="deckTitle">오늘 복습</h2>
+          <p id="deckHint">복습 예정일이 오늘 이전인 카드부터 보여줍니다.</p>
+        </div>
+        <div class="progressWrap"><span id="progressText">0 / 0</span><div class="bar"><i id="progressBar"></i></div></div>
+      </div>
+
+      <article id="card" class="flashcard" tabindex="0" aria-live="polite">
+        <div class="cardFace front">
+          <span id="cardBadge" class="badge">READY</span>
+          <h3 id="cardPrompt">카드를 불러오는 중...</h3>
+          <p id="cardMeta"></p>
+          <button id="flipBtn" class="primary">정답 보기</button>
+        </div>
+        <div class="cardFace back hidden">
+          <span class="badge answer">ANSWER</span>
+          <h3 id="cardAnswer"></h3>
+          <p id="cardNote"></p>
+          <div class="gradeGrid">
+            <button data-grade="again" class="grade again">다시<br><small>10분 뒤</small></button>
+            <button data-grade="hard" class="grade hard">어려움<br><small>1일 뒤</small></button>
+            <button data-grade="good" class="grade good">보통<br><small>간격 증가</small></button>
+            <button data-grade="easy" class="grade easy">쉬움<br><small>크게 증가</small></button>
+          </div>
+        </div>
+      </article>
+
+      <section class="schedule panel">
+        <h2>복습 일정</h2>
+        <div id="scheduleList" class="scheduleList"></div>
+      </section>
+    </section>
+
+    <aside class="panel listPanel">
+      <h2>카드 목록</h2>
+      <div id="cardList" class="cardList"></div>
+    </aside>
+  </main>
+
+  <footer>
+    <p>데이터는 이 브라우저의 localStorage에 저장됩니다. 서버에는 학습 진도가 저장되지 않습니다.</p>
+  </footer>
+
+  <script src="seed-data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
