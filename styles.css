@@ -69,3 +69,13 @@
   .studyArea{display:flex;flex-direction:column;}
   .listPanel .cardList{display:grid;grid-template-columns:1fr;max-height:360px;}
 }
+
+/* v4 mobile width alignment: all study panels stretch to the same width */
+@media (max-width: 900px){
+  .layout{width:100%;align-items:stretch;}
+  .studyArea,.controls,.listPanel,.mobileFilterToggle,.toolbar,.flashcard,.schedule{width:100%;max-width:none;}
+  .studyArea{align-self:stretch;}
+  .mobileFilterToggle,.flashcard,.schedule,.listPanel{margin-left:0;margin-right:0;}
+  .progressWrap{width:100%;}
+  .heroStats{width:100%;}
+}
