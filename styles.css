@@ -50,3 +50,22 @@
   .scheduleList{grid-template-columns:repeat(2,1fr);}
   .flashcard{min-height:300px;}
 }
+
+/* v3 layout: card list below the study card, controls stay left */
+.mobileFilterToggle{display:none;}
+.layout{grid-template-columns:310px minmax(520px,1fr);grid-template-areas:"controls study" "controls list";align-items:start;}
+.controls{grid-area:controls;}
+.studyArea{grid-area:study;}
+.listPanel{grid-area:list;position:static;margin-top:0;}
+.listPanel .cardList{max-height:420px;display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px;}
+@media (max-width: 900px){
+  .mobileFilterToggle{display:block;order:-1;margin:0 0 12px;padding:12px 14px;border-radius:18px;}
+  .mobileFilterToggle summary{cursor:pointer;font-weight:900;color:#dbe8ff;list-style:none;min-height:42px;display:flex;align-items:center;justify-content:space-between;}
+  .mobileFilterToggle summary:after{content:'⌄';color:var(--accent);font-size:18px;}
+  .mobileFilterToggle[open] summary:after{content:'⌃';}
+  .mobileFilterGrid{display:grid;gap:8px;margin-top:8px;}
+  .controls section:nth-of-type(2){display:none;}
+  .layout{display:flex;flex-direction:column;}
+  .studyArea{display:flex;flex-direction:column;}
+  .listPanel .cardList{display:grid;grid-template-columns:1fr;max-height:360px;}
+}

@@ -62,6 +62,20 @@
     </aside>
 
     <section class="studyArea">
+      <details class="mobileFilterToggle panel">
+        <summary>검색/필터 열기</summary>
+        <div class="mobileFilterGrid">
+          <input id="mobileSearch" type="search" placeholder="EOT, 가전자대, ALD..." />
+          <select id="mobileFieldFilter">
+            <option value="">전체 분야</option>
+            <option value="전공정">전공정</option>
+            <option value="후공정">후공정</option>
+            <option value="소자">소자</option>
+          </select>
+          <select id="mobileCategoryFilter"><option value="">전체 세부 분야</option></select>
+          <select id="mobileImportanceFilter"><option value="">전체 중요도</option><option>필수</option><option>필수(핵심단어장)</option><option>자주 나옴</option><option>심화/참고</option><option>후보</option></select>
+        </div>
+      </details>
       <div class="toolbar">
         <div>
           <h2 id="deckTitle">오늘 복습</h2>

@@ -47,11 +47,22 @@ function loadState(){
 function save(){ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
 function dueCards(){ const t=todayStart(); return state.cards.filter(c => (c.due || 0) <= t); }
 function newCards(){ return state.cards.filter(c => !c.reps); }
+function activeFilterValue(desktopId, mobileId){
+  const mobileVisible = window.matchMedia('(max-width: 900px)').matches;
+  const mobile = document.querySelector('#'+mobileId);
+  const desktop = document.querySelector('#'+desktopId);
+  return mobileVisible && mobile ? mobile.value : desktop ? desktop.value : '';
+}
+function setSelectOptions(sel, placeholder, options, prev){
+  if(!sel) return;
+  sel.innerHTML=`<option value="">${placeholder}</option>`+options.map(c=>`<option>${escapeHtml(c)}</option>`).join('');
+  sel.value = options.includes(prev) ? prev : '';
+}
 function filteredCards(){
-  const q = document.querySelector('#search').value.trim().toLowerCase();
-  const field = document.querySelector('#fieldFilter').value;
-  const cat = document.querySelector('#categoryFilter').value;
-  const imp = document.querySelector('#importanceFilter').value;
+  const q = activeFilterValue('search','mobileSearch').trim().toLowerCase();
+  const field = activeFilterValue('fieldFilter','mobileFieldFilter');
+  const cat = activeFilterValue('categoryFilter','mobileCategoryFilter');
+  const imp = activeFilterValue('importanceFilter','mobileImportanceFilter');
   let base = mode==='due' ? dueCards() : mode==='new' ? newCards() : state.cards;
   return base.filter(c => {
     if(field && (c.field || macroField(c.category, c.term))!==field) return false;
@@ -62,12 +73,13 @@ function filteredCards(){
   }).sort((a,b)=>(a.due||0)-(b.due||0));
 }
 function refreshFilters(){
-  const sel=document.querySelector('#categoryFilter'); const prev=sel.value;
-  const field=document.querySelector('#fieldFilter')?.value || '';
+  const desktopSel=document.querySelector('#categoryFilter');
+  const mobileSel=document.querySelector('#mobileCategoryFilter');
+  const field=activeFilterValue('fieldFilter','mobileFieldFilter');
   const cardsForField = field ? state.cards.filter(c => (c.field || macroField(c.category,c.term))===field) : state.cards;
   const cats=[...new Set(cardsForField.map(c=>c.category).filter(Boolean))].sort();
-  sel.innerHTML='<option value="">전체 세부 분야</option>'+cats.map(c=>`<option>${escapeHtml(c)}</option>`).join('');
-  sel.value = cats.includes(prev) ? prev : '';
+  setSelectOptions(desktopSel, '전체 세부 분야', cats, desktopSel?.value || '');
+  setSelectOptions(mobileSel, '전체 세부 분야', cats, mobileSel?.value || '');
 }
 function escapeHtml(s=''){ return String(s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 function render(){
@@ -170,7 +182,7 @@ document.querySelectorAll('.mode').forEach(b=>b.addEventListener('click',()=>{do
 document.querySelector('#flipBtn').addEventListener('click',flip);
 document.querySelector('#card').addEventListener('keydown',e=>{ if(e.key===' '||e.key==='Enter'){e.preventDefault(); flip();} });
 document.querySelectorAll('[data-grade]').forEach(b=>b.addEventListener('click',()=>grade(b.dataset.grade)));
-['search','fieldFilter','categoryFilter','importanceFilter'].forEach(id=>document.querySelector('#'+id).addEventListener('input',()=>{currentIndex=0;render();}));
+['search','fieldFilter','categoryFilter','importanceFilter','mobileSearch','mobileFieldFilter','mobileCategoryFilter','mobileImportanceFilter'].forEach(id=>{const el=document.querySelector('#'+id); if(el) el.addEventListener('input',()=>{currentIndex=0;render();});});
 document.querySelector('#resetProgress').addEventListener('click',()=>{ if(confirm('학습 진도를 초기화할까요? 카드 자체는 유지됩니다.')){state.cards.forEach(c=>{c.interval=0;c.ease=2.5;c.reps=0;c.due=todayStart();c.last=null;});save();render();} });
 document.querySelector('#exportDeck').addEventListener('click',exportDeck);
 document.querySelector('#downloadCsvTemplate').addEventListener('click',downloadCsvTemplate);
