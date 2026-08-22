@@ -79,3 +79,30 @@
   .progressWrap{width:100%;}
   .heroStats{width:100%;}
 }
+
+
+/* v5 random-order controls */
+.toolbarRight{display:flex;flex-direction:column;align-items:flex-end;gap:10px;min-width:230px;}
+.shuffleBtn{white-space:nowrap;border:1px solid rgba(126,231,200,.18);}
+.shuffleBtn.active{background:linear-gradient(135deg,#1d7b69,#2f5fbe);color:white;font-weight:900;border-color:rgba(126,231,200,.55);}
+@media (max-width: 900px){
+  .toolbarRight{width:100%;align-items:stretch;min-width:0;}
+  .shuffleBtn{width:100%;}
+}
+
+
+/* v6 order controls */
+.orderButtons{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;}
+.sortBtn.active{background:rgba(126,231,200,.12);border:1px solid rgba(126,231,200,.32);color:#dffdf4;font-weight:800;}
+@media (max-width: 900px){
+  .orderButtons{display:grid;grid-template-columns:1fr 1fr;width:100%;}
+}
+
+
+/* v7 answer typography: full name and Korean name on separate lines */
+.answerFull,.answerKo{display:block;}
+.answerFull{font-weight:800;}
+.answerKo{font-weight:300;font-size:.58em;line-height:1.35;color:var(--muted);margin-top:10px;}
+@media (max-width: 900px){
+  .answerKo{font-size:.62em;margin-top:8px;}
+}

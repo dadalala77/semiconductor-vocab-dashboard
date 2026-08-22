@@ -42,9 +42,38 @@ function loadState(){
     } catch(e){}
   }
   const seed = (window.SEMI_VOCAB_SEED?.cards || []).map(normalizeCard);
-  return {cards: seed, created: new Date().toISOString()};
+  return {cards: seed, created: new Date().toISOString(), randomOrder:false, randomSeed:''};
 }
 function save(){ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
+function hashString(str){
+  let h=2166136261;
+  for(let i=0;i<str.length;i++){ h^=str.charCodeAt(i); h=Math.imul(h,16777619); }
+  return h>>>0;
+}
+function orderedCards(cards){
+  if(state.randomOrder){
+    const seed=String(state.randomSeed || 'semi-vocab');
+    return [...cards].sort((a,b)=>hashString(seed+'|'+a.id+'|'+a.term)-hashString(seed+'|'+b.id+'|'+b.term));
+  }
+  return [...cards].sort((a,b)=>(a.due||0)-(b.due||0));
+}
+function reshuffle(){
+  state.randomOrder = true;
+  state.randomSeed = Date.now().toString(36) + Math.random().toString(36).slice(2);
+  currentIndex = 0;
+  save();
+  render();
+}
+function toggleShuffle(){
+  if(state.randomOrder){ sortDefault(); } else { reshuffle(); }
+}
+function sortDefault(){
+  state.randomOrder = false;
+  state.randomSeed = '';
+  currentIndex = 0;
+  save();
+  render();
+}
 function dueCards(){ const t=todayStart(); return state.cards.filter(c => (c.due || 0) <= t); }
 function newCards(){ return state.cards.filter(c => !c.reps); }
 function activeFilterValue(desktopId, mobileId){
@@ -64,13 +93,14 @@ function filteredCards(){
   const cat = activeFilterValue('categoryFilter','mobileCategoryFilter');
   const imp = activeFilterValue('importanceFilter','mobileImportanceFilter');
   let base = mode==='due' ? dueCards() : mode==='new' ? newCards() : state.cards;
-  return base.filter(c => {
+  const filtered = base.filter(c => {
     if(field && (c.field || macroField(c.category, c.term))!==field) return false;
     if(cat && c.category!==cat) return false;
     if(imp && c.importance!==imp) return false;
     const hay = [c.term,c.prompt,c.answer,c.expansion,c.korean,c.category,c.note].join(' ').toLowerCase();
     return !q || hay.includes(q);
-  }).sort((a,b)=>(a.due||0)-(b.due||0));
+  });
+  return orderedCards(filtered);
 }
 function refreshFilters(){
   const desktopSel=document.querySelector('#categoryFilter');
@@ -82,6 +112,19 @@ function refreshFilters(){
   setSelectOptions(mobileSel, '전체 세부 분야', cats, mobileSel?.value || '');
 }
 function escapeHtml(s=''){ return String(s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+function answerHtml(c){
+  let full = c.expansion || '';
+  let ko = c.korean || '';
+  if((!full || !ko) && c.answer && c.answer.includes(' / ')){
+    const parts = c.answer.split(' / ');
+    if(!full) full = parts[0] || '';
+    if(!ko) ko = parts.slice(1).join(' / ') || '';
+  }
+  if(full || ko){
+    return `<span class="answerFull">${escapeHtml(full || c.term || '')}</span><span class="answerKo">${escapeHtml(ko || '')}</span>`;
+  }
+  return `<span class="answerFull">${escapeHtml(c.answer || '')}</span>`;
+}
 function render(){
   refreshFilters();
   currentDeck = filteredCards();
@@ -90,6 +133,17 @@ function render(){
   document.querySelector('#statDue').textContent=dueCards().length;
   document.querySelector('#statMastered').textContent=state.cards.filter(c=>c.reps>=5 && c.interval>=14).length;
   const titles={due:['오늘 복습','복습 예정일이 오늘 이전인 카드부터 보여줍니다.'],new:['새 카드','아직 학습하지 않은 새 카드입니다.'],all:['전체 카드','검색/필터로 원하는 용어를 골라 볼 수 있습니다.']};
+  const shuffleBtn=document.querySelector('#shuffleDeck');
+  if(shuffleBtn){
+    shuffleBtn.textContent = state.randomOrder ? '랜덤 다시 섞기' : '랜덤 섞기';
+    shuffleBtn.classList.toggle('active', !!state.randomOrder);
+    shuffleBtn.title = '현재 카드 묶음을 새 랜덤 순서로 섞습니다';
+  }
+  const sortBtn=document.querySelector('#sortDefault');
+  if(sortBtn){
+    sortBtn.classList.toggle('active', !state.randomOrder);
+    sortBtn.title = '복습 예정일/기본 순서로 되돌립니다';
+  }
   document.querySelector('#deckTitle').textContent=titles[mode][0];
   document.querySelector('#deckHint').textContent=titles[mode][1];
   renderCard(); renderList(); renderSchedule();
@@ -109,7 +163,7 @@ function renderCard(){
   document.querySelector('#cardBadge').textContent=c.field || c.category || 'CARD';
   document.querySelector('#cardPrompt').textContent=c.prompt || c.term;
   document.querySelector('#cardMeta').textContent=[c.category, c.importance, c.reps?`복습 ${c.reps}회`:'새 카드', `간격 ${c.interval||0}일`].filter(Boolean).join(' · ');
-  document.querySelector('#cardAnswer').textContent=c.answer;
+  document.querySelector('#cardAnswer').innerHTML=answerHtml(c);
   document.querySelector('#cardNote').textContent=c.note || [c.expansion,c.korean,c.source].filter(Boolean).join(' · ');
 }
 function renderList(){
@@ -180,6 +234,8 @@ function downloadCsvTemplate(){
 
 document.querySelectorAll('.mode').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.mode').forEach(x=>x.classList.remove('active')); b.classList.add('active'); mode=b.dataset.mode; currentIndex=0; render();}));
 document.querySelector('#flipBtn').addEventListener('click',flip);
+document.querySelector('#shuffleDeck').addEventListener('click',reshuffle);
+document.querySelector('#sortDefault').addEventListener('click',sortDefault);
 document.querySelector('#card').addEventListener('keydown',e=>{ if(e.key===' '||e.key==='Enter'){e.preventDefault(); flip();} });
 document.querySelectorAll('[data-grade]').forEach(b=>b.addEventListener('click',()=>grade(b.dataset.grade)));
 ['search','fieldFilter','categoryFilter','importanceFilter','mobileSearch','mobileFieldFilter','mobileCategoryFilter','mobileImportanceFilter'].forEach(id=>{const el=document.querySelector('#'+id); if(el) el.addEventListener('input',()=>{currentIndex=0;render();});});
